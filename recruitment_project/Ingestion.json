@@ -1,0 +1,620 @@
+{
+  "name": "Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const recruiterMap = {\n  'Ana Reyes': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',\n  'David Park': 'b2c3d4e5-f6a7-8901-bcde-f12345678901',\n  'Sarah Mwangi': 'c3d4e5f6-a7b8-9012-cdef-123456789012'\n};\n\nconst wpMap = {\n  'Acme Corp - Technology Transformation': 'd4e5f6a7-b8c9-0123-defa-234567890123',\n  'Acme Corp - Data & Analytics': 'e5f6a7b8-c9d0-1234-efab-345678901234',\n  'Pinnacle Health - Digital Operations': 'f6a7b8c9-d0e1-2345-fabc-456789012345'\n};\n\nconst validSources = ['hiring_manager', 'candidate', 'sourcing', 'market', 'internal_team', 'other', ''];\nconst validTypes = ['requirement_change', 'market_intel', 'candidate_feedback', 'process_note', 'sourcing_lead', 'risk_flag', 'general', ''];\nconst validUrgencies = ['action_needed', 'heads_up', 'for_context', ''];\nconst validVisibilities = ['internal_only', 'client_shareable', ''];\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const input = item.json;\n  const errors = [];\n\n  // Required: note\n  if (!input.note || input.note.trim() === '') {\n    errors.push('Note is required');\n  }\n\n  // Required: created_by\n  if (!input.created_by || input.created_by.trim() === '') {\n    errors.push('Recruiter (created_by) is required');\n  }\n\n  // Validate enums if provided\n  if (input.signal_source && !validSources.includes(input.signal_source)) {\n    errors.push(`Invalid signal_source: ${input.signal_source}`);\n  }\n  if (input.signal_type && !validTypes.includes(input.signal_type)) {\n    errors.push(`Invalid signal_type: ${input.signal_type}`);\n  }\n  if (input.urgency && !validUrgencies.includes(input.urgency)) {\n    errors.push(`Invalid urgency: ${input.urgency}`);\n  }\n  if (input.visibility && !validVisibilities.includes(input.visibility)) {\n    errors.push(`Invalid visibility: ${input.visibility}`);\n  }\n\n  // Resolve UUIDs\n  const createdByUUID = input.created_by ? (recruiterMap[input.created_by] || null) : null;\n  const wpUUID = input.wp_id ? (wpMap[input.wp_id] || null) : null;\n\n  if (input.created_by && !createdByUUID) {\n    errors.push(`Recruiter not found: ${input.created_by}`);\n  }\n  if (input.wp_id && !wpUUID) {\n    errors.push(`Work Packet not found: ${input.wp_id}`);\n  }\n\n  results.push({\n    json: {\n      row_number: input.row_number,\n      sheet_id: input.id,\n      isValid: errors.length === 0,\n      errors: errors,\n      payload: {\n        id: input.id,\n        wp_id: wpUUID || null,\n        position_code: input.position_code || null,\n        note: input.note,\n        signal_source: input.signal_source || null,\n        signal_type: input.signal_type || null,\n        urgency: input.urgency || 'for_context',\n        tags: input.tags \n          ? input.tags.split('|').map(t => t.trim()).filter(t => t) \n          : [],\n        visibility: input.visibility || 'internal_only',\n        created_by: createdByUUID,\n        created_at: input.created_at || new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        0
+      ],
+      "id": "2ab9bc21-7951-45d2-8f50-347e3f30338d",
+      "name": "Validation Node"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
+          "mode": "list",
+          "cachedResultName": "Recruitment",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Observations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5a800787-7d3d-4b8b-b0a2-a1b09e5b5095",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "giivQGKZNNVyZQYZ",
+          "name": "Davichon's account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36640c24-5d8e-4e9f-95b1-e85388558c31",
+              "leftValue": "={{ $('Validation Node').item.json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        16
+      ],
+      "id": "756f6418-897f-4732-81be-34ce25487121",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "tableId": "observations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wp_id",
+              "fieldValue": "={{ $json.payload.wp_id }}"
+            },
+            {
+              "fieldId": "position_code",
+              "fieldValue": "={{ $json.payload.position_code }}"
+            },
+            {
+              "fieldId": "note",
+              "fieldValue": "={{ $json.payload.note }}"
+            },
+            {
+              "fieldId": "signal_source",
+              "fieldValue": "={{ $json.payload.signal_source }}"
+            },
+            {
+              "fieldId": "signal_type",
+              "fieldValue": "={{ $json.payload.signal_type }}"
+            },
+            {
+              "fieldId": "urgency",
+              "fieldValue": "={{ $json.payload.urgency }}"
+            },
+            {
+              "fieldId": "tags",
+              "fieldValue": "={{ $json.payload.tags }}"
+            },
+            {
+              "fieldId": "visibility",
+              "fieldValue": "={{ $json.payload.visibility }}"
+            },
+            {
+              "fieldId": "created_by",
+              "fieldValue": "={{ $json.payload.created_by }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.payload.created_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -80
+      ],
+      "id": "b98de89d-c530-43d5-8e79-ee91c600a753",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fpdzciO1OqKKYS8Z",
+          "name": "Davichon's account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "304327f6-3e0f-4940-999d-536a01b07fba",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
+          "mode": "list",
+          "cachedResultName": "Recruitment",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Observations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Validation Node').item.json.sheet_id }}",
+            "status": "inserted"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "wp_id",
+              "displayName": "wp_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "position_code",
+              "displayName": "position_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signal_source",
+              "displayName": "signal_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signal_type",
+              "displayName": "signal_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "visibility",
+              "displayName": "visibility",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        -80
+      ],
+      "id": "162badf4-5fc4-4620-9595-d2ef8ea6c829",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LjQMZEGRg7OiWS5y",
+          "name": "Davichon's account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        112
+      ],
+      "id": "017c3a0e-4d2f-460d-9a88-88b4c4faa17d",
+      "name": "Wait",
+      "webhookId": "7472cb9e-91f0-4d46-9c7c-f74787be5070"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
+          "mode": "list",
+          "cachedResultName": "Recruitment",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Observations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Validation Node').item.json.sheet_id }}",
+            "status": "=error: {{ $('Validation Node').item.json.errors.join(', ') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "wp_id",
+              "displayName": "wp_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "position_code",
+              "displayName": "position_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signal_source",
+              "displayName": "signal_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signal_type",
+              "displayName": "signal_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "visibility",
+              "displayName": "visibility",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        112
+      ],
+      "id": "45a78622-b31d-4d95-ab8e-59a1220f1757",
+      "name": "Update row in sheet (error)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LjQMZEGRg7OiWS5y",
+          "name": "Davichon's account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validation Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Node": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet (error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a6021e7b-8e7d-4444-8113-312512918344",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a722b181c4e1e7c4940b0f532833b03f06d4a3517ba0bc16dec07054a21b58b9"
+  },
+  "nodeGroups": [],
+  "id": "4MW27OWx3PmkMQsj",
+  "tags": []
+}
