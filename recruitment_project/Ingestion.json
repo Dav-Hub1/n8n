@@ -28,14 +28,14 @@
           "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
           "mode": "list",
           "cachedResultName": "Recruitment",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+          "cachedResultUrl": "spreadsheets/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
           "cachedResultName": "Observations",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+          "cachedResultUrl": "spreadsheets/edit#gid=0"
         },
         "event": "rowAdded",
         "options": {}
@@ -173,14 +173,14 @@
           "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
           "mode": "list",
           "cachedResultName": "Recruitment",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+          "cachedResultUrl": "spreadsheets/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
           "cachedResultName": "Observations",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+          "cachedResultUrl": "spreadsheets/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -355,14 +355,14 @@
           "value": "1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM",
           "mode": "list",
           "cachedResultName": "Recruitment",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit?usp=drivesdk"
+          "cachedResultUrl": "spreadsheets/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
           "cachedResultName": "Observations",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfLTKtxGn1P7saXFXONDF_J6C7PEzFisSXJrD6MOhsM/edit#gid=0"
+          "cachedResultUrl": "spreadsheets/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
